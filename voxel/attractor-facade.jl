@@ -1,38 +1,58 @@
 using GLMakie
 using GeometryBasics
+using LinearAlgebra
 
-posisi = Point3f[]
-ukuran_box = Vec3f[]
-warna = Float64[]
+nx, ny = 20, 12
+grid_x = range(-10, 10, length=nx)
+grid_y = range(-6, 6, length=ny)
 
-range_x = -10:20
-range_z = 0:20
-
-magnet_x = 5
-magnet_z = 10
-
-for x in range_x, z in range_z
-    y = 0
-    jarak = sqrt((x - magnet_x)^2 + (z - magnet_z)^2)
-    skala = 0.1 + (jarak * 0.05)
-
-    if skala > 0.8
-        skala = 0.8
+panel_centers = Point2f[]
+for y in grid_y
+    for x in grid_x
+        push!(panel_centers, Point2f(x, y))
     end
-
-    push!(posisi, Point3f(x, y, z))
-    push!(ukuran_box, Vec3f(skala, 0.2, skala))
-    push!(warna, skala)
 end
 
-fig = Figure(size=(800, 800))
-ax = Axis3(fig[1, 1], aspect=:data)
+sizes_live = Observable(fill(Vec2f(0.9, 0.9), length(panel_centers)))
 
-meshscatter!(ax, posisi,
-    marker=Rect3f(Vec3f(-0.5, -0.5, -0.5), Vec3f(1, 1, 1)),
-    markersize=ukuran_box,
-    color=warna,
-    colormap=:magma
+sun_pos = Observable(Point2f(0, 0))
+
+function update_panels(matahari)
+    new_sizes = Vec2f[]
+
+    for center in panel_centers
+        dist = norm(center - matahari)
+        faktor = clamp(dist / 8.0, 0.1, 1.0)
+        push!(new_sizes, Vec2f(faktor * 0.9, faktor * 0.9))
+    end
+    return new_sizes
+end
+
+fig = Figure(size=(900, 600))
+ax = Axis(fig[1, 1], aspect=DataAspect())
+
+meshscatter!(ax, panel_centers,
+    marker=Rect2f(Vec2f(-0.5), Vec2f(1)),
+    markersize=sizes_live,
+    color=:cyan,
+    shading=NoShading
 )
 
+scatter!(ax, sun_pos, color=:red, markersize=30, glowwidth=20, glowcolor=(:red, 0.5))
+
 display(fig)
+
+@async begin
+    println("Matahari bergerak..")
+    for t in 0:0.5:20
+        mx = sin(t) * 8
+        my = sin(t * 2) * 4
+        posisi_baru = Point2f(mx, my)
+
+        sun_pos[] = posisi_baru
+        sizes_live[] = update_panels(posisi_baru)
+
+        sleeo(0.02)
+    end
+    Println("Selesai!")
+end
