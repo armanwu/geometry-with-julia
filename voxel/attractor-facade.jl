@@ -22,8 +22,10 @@ function update_panels(matahari)
 
     for center in panel_centers
         dist = norm(center - matahari)
-        faktor = clamp(dist / 8.0, 0.1, 1.0)
-        push!(new_sizes, Vec2f(faktor * 0.9, faktor * 0.9))
+        rasio_jarak = clamp(dist / 9.0, 0.0, 1.0)
+        ukuran = 1.0 - rasio_jarak
+        ukuran_final = max(ukuran, 0.25)
+        push!(new_sizes, Vec2f(ukuran_final, ukuran_final))
     end
     return new_sizes
 end
@@ -52,7 +54,7 @@ display(fig)
         sun_pos[] = posisi_baru
         sizes_live[] = update_panels(posisi_baru)
 
-        sleeo(0.02)
+        sleep(0.2)
     end
     Println("Selesai!")
 end
