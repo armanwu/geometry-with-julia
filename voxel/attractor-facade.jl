@@ -13,7 +13,7 @@ for y in grid_y
     end
 end
 
-sizes_live = Observable(fill(Vec2f(0.9, 0.9), length(panel_centers)))
+sizes_live = Observable(fill(Vec2f(0.1, 0.1), length(panel_centers)))
 
 sun_pos = Observable(Point2f(0, 0))
 
