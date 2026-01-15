@@ -15,10 +15,10 @@ function bikin_kristal(pusat_x, pusat_y)
     return GeometryBasics.Mesh(points, faces)
 end
 
-fig = Figure(size=(800, 800), backgroundcolor=:white)
+fig = Figure(size=(780, 780), backgroundcolor=:white)
 ax = Axis3(fig[1, 1], aspect=:data, perspectiveness=0.05, azimuth=0.3π, elevation=0.1π)
 hidedecorations!(ax)
-hidespines!(ax)
+
 
 display(fig)
 
