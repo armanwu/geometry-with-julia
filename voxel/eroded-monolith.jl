@@ -11,7 +11,7 @@ radius_pahat = 7.0
 voxels_live = Observable(Point3f[])
 colors_live = Observable(Float64[])
 
-fig = Figure(size=(800, 800))
+fig = Figure(size=(1000, 1000))
 ax = LScene(fig[1, 1])
 
 batas_lahan = Rect3f(Vec3f(-7, -7, 0), Vec3f(14, 14, 21))
