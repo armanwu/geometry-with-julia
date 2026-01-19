@@ -4,9 +4,9 @@ using Random
 using Colors
 
 function bikin_kristal(pusat_x, pusat_y)
-    tinggi = rand(25:45)
+    tinggi = rand(20:50)
     puncak = Point3f(pusat_x + rand(-20:20), pusat_y + rand(-20:20), tinggi)
-    lebar = rand(15:25)
+    lebar = rand(20:30)
     alas_1 = Point3f(pusat_x + rand(-lebar:lebar), pusat_y + rand(-lebar:lebar), 0)
     alas_2 = Point3f(pusat_x + rand(-lebar:lebar), pusat_y + rand(-lebar:lebar), 0)
     alas_3 = Point3f(pusat_x + rand(-lebar:lebar), pusat_y + rand(-lebar:lebar), 0)
@@ -24,8 +24,8 @@ hidespines!(ax);
 display(fig)
 
 jumlah = 10
-posisi_x = rand(-5:5, jumlah)
-posisi_y = rand(-5:5, jumlah)
+posisi_x = rand(-10:10, jumlah)
+posisi_y = rand(-10:10, jumlah)
 
 gudang_kristal = []
 gudang_warna = []
