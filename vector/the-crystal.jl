@@ -54,3 +54,5 @@ for i in 1:jumlah_pecahan
 end
 
 display(fig)
+
+save("hasil_kristal.png", fig)
