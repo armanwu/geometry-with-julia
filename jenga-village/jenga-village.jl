@@ -7,7 +7,7 @@ fig = Figure(size=(800, 800))
 batas_pandang = (-10, 60, -10, 60, 0, 30)
 ax = Axis3(fig[1, 1],
     aspect=:data,
-    limits=batas_pandang, # <--- INI KUNCINYA
+    limits=batas_pandang,
     perspectiveness=0.05,
     azimuth=0.25π,
     elevation=0.2π
