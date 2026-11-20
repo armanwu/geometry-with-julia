@@ -130,7 +130,7 @@ entered_seed = Observable("")
 
 # Create the figure
 fig = Figure(
-    size=(800, 800),
+    size=(1200, 800),
     backgroundcolor=:white
 )
 
