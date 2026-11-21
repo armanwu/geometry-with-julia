@@ -3,109 +3,236 @@ using GeometryBasics
 using Random
 using Colors
 
-fig = Figure(size=(960, 1000))
-ax = Axis3(fig[1, 1], aspect=:data, azimuth=0.6π, elevation=0.15π)
-hidedecorations!(ax); hidespines!(ax)
+# Initialize the 3D visualization environment
+fig = Figure(
+    size=(960, 1000),
+    backgroundcolor=:white
+)
 
-function bikin_prisma_tajam(pusat_x, pusat_y, tinggi, kemiringan_x, kemiringan_y, rotasi_z)
-    
-    lebar_alas = rand(15.0:25.0)
-    
-    p_alas = [
-        Point3f(pusat_x + rand(-5:5),            pusat_y + rand(-5:5), 0),
-        Point3f(pusat_x + lebar_alas,            pusat_y + rand(-5:5), 0),
-        Point3f(pusat_x + rand(0:5),             pusat_y + lebar_alas, 0)
+# Configure the 3D architectural visualization
+ax = Axis3(
+    fig[1, 1],
+    aspect=:data,
+    azimuth=0.6π,
+    elevation=0.15π
+)
+
+# Hide axis decorations and spines
+hidedecorations!(ax)
+hidespines!(ax)
+
+# Generate an inclined and twisted triangular prism
+function create_sharp_prism(
+    center_x,
+    center_y,
+    height,
+    tilt_x,
+    tilt_y,
+    rotation_z
+)
+
+    # Define the randomized width of the triangular base
+    base_width = rand(15.0:25.0)
+
+    # Generate three vertices forming the triangular base
+    base_points = [
+        Point3f(
+            center_x + rand(-5:5),
+            center_y + rand(-5:5),
+            0
+        ),
+        Point3f(
+            center_x + base_width,
+            center_y + rand(-5:5),
+            0
+        ),
+        Point3f(
+            center_x + rand(0:5),
+            center_y + base_width,
+            0
+        )
     ]
-    
-    # TITIK PUNCAK (Digeser jauh biar miring ekstrem)
-    # Puncak tidak harus lancip 1 titik, bisa juga bidang kecil (potongan)
-    
-    offset_x = kemiringan_x * tinggi
-    offset_y = kemiringan_y * tinggi
-    
-    p_atap = [
-        p + Point3f(offset_x, offset_y, tinggi) for p in p_alas
+
+    # Calculate horizontal displacement based on height and inclination
+    offset_x = tilt_x * height
+    offset_y = tilt_y * height
+
+    # Generate the upper triangular surface
+    roof_points = [
+        point + Point3f(offset_x, offset_y, height)
+        for point in base_points
     ]
-    
-    # ROTASI MANUAL (Z-Axis) untuk titik atap saja (Twist Effect)
-    # atau putar semuanya. Kita putar titik atap sedikit biar makin 'sakit' bentuknya.
-    c = cos(rotasi_z)
-    s = sin(rotasi_z)
-    
-    # Fungsi putar titik terhadap pusat rata-rata atap
-    center_atap = sum(p_atap) / 3
-    p_atap_final = Point3f[]
-    
-    for p in p_atap
-        dx = p[1] - center_atap[1]
-        dy = p[2] - center_atap[2]
-        rx = dx*c - dy*s + center_atap[1]
-        ry = dx*s + dy*c + center_atap[2]
-        push!(p_atap_final, Point3f(rx, ry, p[3]))
+
+    # Calculate rotation components around the vertical Z-axis
+    cos_angle = cos(rotation_z)
+    sin_angle = sin(rotation_z)
+
+    # Calculate the geometric center of the upper surface
+    roof_center = sum(roof_points) / 3
+
+    # Initialize the collection of rotated upper vertices
+    rotated_roof_points = Point3f[]
+
+    # Rotate the upper vertices around their geometric center
+    # The triangular base remains stationary
+    for point in roof_points
+
+        # Calculate local coordinates relative to the roof center
+        dx = point[1] - roof_center[1]
+        dy = point[2] - roof_center[2]
+
+        # Apply the rotation transformation
+        rotated_x =
+            dx * cos_angle -
+                dy * sin_angle +
+                roof_center[1]
+
+        rotated_y =
+            dx * sin_angle +
+                dy * cos_angle +
+                roof_center[2]
+
+        # Store the transformed upper vertex
+        push!(
+            rotated_roof_points,
+            Point3f(
+                rotated_x,
+                rotated_y,
+                point[3]
+            )
+        )
     end
-    
-    # GABUNG & JAHIT
-    # Urutan: Alas(1-2-3), Atap(4-5-6)
-    all_points = [p_alas; p_atap_final]
-    
+
+    # Combine the base and upper vertices
+    # Vertices 1-3 define the triangular base
+    # Vertices 4-6 define the transformed upper surface
+    all_points = [
+        base_points;
+        rotated_roof_points
+    ]
+
+    # Construct the triangular faces of the prism
     faces = [
-        # Alas & Atap
-        GLTriangleFace(1, 2, 3), GLTriangleFace(4, 6, 5),
-        # Dinding Samping (Perlu logika urutan melingkar)
-        GLTriangleFace(1, 2, 5), GLTriangleFace(1, 5, 4),
-        GLTriangleFace(2, 3, 6), GLTriangleFace(2, 6, 5),
-        GLTriangleFace(3, 1, 4), GLTriangleFace(3, 4, 6)
+
+        # Bottom triangular surface
+        GLTriangleFace(1, 2, 3),
+
+        # Top triangular surface
+        GLTriangleFace(4, 6, 5),
+
+        # First lateral surface
+        GLTriangleFace(1, 2, 5),
+        GLTriangleFace(1, 5, 4),
+
+        # Second lateral surface
+        GLTriangleFace(2, 3, 6),
+        GLTriangleFace(2, 6, 5),
+
+        # Third lateral surface
+        GLTriangleFace(3, 1, 4),
+        GLTriangleFace(3, 4, 6)
     ]
-    
-    return GeometryBasics.Mesh(all_points, faces)
+
+    # Construct and return the final architectural mesh
+    return GeometryBasics.Mesh(
+        all_points,
+        faces
+    )
 end
 
-# --- 3. KOMPOSISI ---
-println("Membangun Museum Dekonstruksi...")
+# Initialize the architectural massing composition
+println("Generating Deconstructivist Museum...")
 
-palet_titanium = [
-    RGBAf(0.6, 0.65, 0.7, 0.9), # Zinc Grey
-    RGBAf(0.5, 0.55, 0.6, 0.9), # Dark Metal
-    RGBAf(0.7, 0.75, 0.8, 0.8), # Light Aluminium
-    RGBAf(0.2, 0.25, 0.3, 0.95) # Contrast Dark
+# Define a titanium-inspired metallic color palette
+titanium_palette = [
+
+    # Zinc Grey
+    RGBAf(0.6, 0.65, 0.7, 0.9),
+
+    # Dark Metal
+    RGBAf(0.5, 0.55, 0.6, 0.9),
+
+    # Light Aluminium
+    RGBAf(0.7, 0.75, 0.8, 0.8),
+
+    # Contrast Dark
+    RGBAf(0.2, 0.25, 0.3, 0.95)
 ]
 
-# Kita buat 4 Massa yang saling menabrak di tengah (0,0)
-konfigurasi = [
-    # (x, y, tinggi, miring_x, miring_y, rotasi)
-    (0, 0, 35.0,  0.4,  0.2,  0.2), # Massa Utama
-    (-10, 5, 25.0, -0.5,  0.1, -0.3), # Tabrakan dari kiri
-    (5, -10, 20.0,  0.1, -0.6,  0.5), # Tabrakan dari depan
-    (0, 0, 45.0, -0.2, -0.2, 0.8)     # Menara Jarum (Spire)
+# Define four intersecting architectural masses
+# Each configuration contains:
+# center_x, center_y, height, tilt_x, tilt_y, rotation_z
+
+mass_configurations = [
+
+    # Primary architectural mass
+    (0, 0, 35.0, 0.4, 0.2, 0.2),
+
+    # Secondary mass intersecting from the left
+    (-10, 5, 25.0, -0.5, 0.1, -0.3),
+
+    # Secondary mass intersecting from the front
+    (5, -10, 20.0, 0.1, -0.6, 0.5),
+
+    # Tall inclined architectural spire
+    (0, 0, 45.0, -0.2, -0.2, 0.8)
 ]
 
-for (i, config) in enumerate(konfigurasi)
-    
-    x, y, h, mx, my, rot = config
-    
-    # Bikin Geometri
-    shard = bikin_prisma_tajam(x, y, h, mx, my, rot)
-    
-    # 1. Render Massa Solid
-    warna = palet_titanium[mod1(i, 4)]
-    mesh!(ax, shard, color=warna, shading=FastShading, 
-          specular=Vec3f(0.8), shininess=10.0f0) # Kilap Logam
-    
-    # 2. Render Garis Tepi (PENTING untuk Libeskind)
-    wireframe!(ax, shard, color=(:white, 0.6), linewidth=1.5)
-    
-    # 3. "The Cuts" (Jendela Sayatan)
-    # Kita gambar garis acak di permukaan massanya
-    # Trik visual: Ambil bounding box acak di sekitar massa
-    for _ in 1:5
-        p_start = Point3f(x + rand(-5:5), y + rand(-5:5), rand(2:h-5))
-        # Garis miring tajam
-        p_end = p_start + Point3f(rand(-5:5), rand(-5:5), rand(-5:5))
-        lines!(ax, [p_start, p_end], color=:black, linewidth=3.0)
-    end
+# Generate the architectural composition
+for (index, configuration) in enumerate(mass_configurations)
+
+    # Extract geometric transformation parameters
+    center_x, center_y, height, tilt_x, tilt_y, rotation_z = configuration
+
+    # Generate the inclined and twisted triangular prism
+    architectural_mass = create_sharp_prism(
+        center_x,
+        center_y,
+        height,
+        tilt_x,
+        tilt_y,
+        rotation_z
+    )
+
+    # Select the corresponding metallic material color
+    material_color = titanium_palette[
+        mod1(index, length(titanium_palette))
+    ]
+
+    # Render the solid architectural geometry
+    # FastShading provides basic surface illumination
+    # Specular controls the intensity of reflected highlights
+    # Shininess controls the appearance of metallic reflections
+    mesh!(
+        ax,
+        architectural_mass,
+        color=material_color,
+        shading=FastShading,
+        specular=Vec3f(0.8),
+        shininess=10.0f0
+    )
+
+    # Highlight the geometric edges using a white wireframe
+    # The wireframe emphasizes angularity and geometric fragmentation
+    wireframe!(
+        ax,
+        architectural_mass,
+        color=(:white, 0.6),
+        linewidth=1.5
+    )
 end
 
-# Manusia Skala (Kecil sekali dibanding gedung)
-# mesh!(ax, Rect3f(Point3f(15, 15, 0), Vec3f(0.5, 0.5, 1.8)), color=:red)
+# Optional human-scale reference
+# Uncomment the following code to display a human-scale marker
 
+# mesh!(
+#     ax,
+#     Rect3f(
+#         Point3f(15, 15, 0),
+#         Vec3f(0.5, 0.5, 1.8)
+#     ),
+#     color=:red
+# )
+
+# Display the final architectural composition
 display(fig)
